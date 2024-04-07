@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package video.pb;
+
+import "google/api/annotations.proto";
+import "modules/video/pb/message.proto";
+
+option go_package = "github.com/NTHU-LSALAB/NTHU-Distributed-System/modules/video/pb";
+
+service Video {
+	rpc Healthz(HealthzRequest) returns (HealthzResponse) {
+		option (google.api.http) = {
+			get: "/"
+		};
+	}
+
+	rpc GetVideo(GetVideoRequest) returns (GetVideoResponse) {
+		option (google.api.http) = {
+			get: "/v1/videos/{id}"
+			response_body: "video"
+		};
+	}
+
+	rpc ListVideo(ListVideoRequest) returns (ListVideoResponse) {
+		option (google.api.http) = {
+			get: "/v1/videos"
+			response_body: "*"
+		};
+	}
+
+	rpc UploadVideo(stream UploadVideoRequest) returns (UploadVideoResponse) {}
+
+	rpc DeleteVideo(DeleteVideoRequest) returns (DeleteVideoResponse) {
+		option (google.api.http) = {
+			delete: "/v1/videos/{id}"
+			response_body: "*"
+		};
+	}
+}

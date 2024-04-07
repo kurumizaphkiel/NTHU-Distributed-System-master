@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package comment.pb;
+
+import "google/api/annotations.proto";
+import "modules/comment/pb/message.proto";
+
+option go_package = "github.com/NTHU-LSALAB/NTHU-Distributed-System/modules/comment/pb";
+
+service Comment {
+	rpc Healthz(HealthzRequest) returns (HealthzResponse) {
+		option (google.api.http) = {
+			get: "/"
+		};
+	}
+	
+	rpc ListComment(ListCommentRequest) returns (ListCommentResponse) {
+		option (google.api.http) = {
+			get: "/v1/comments/{video_id}"
+			response_body: "*"
+		};
+	}
+
+	rpc CreateComment(CreateCommentRequest) returns (CreateCommentResponse) {
+		option (google.api.http) = {
+			post: "/v1/comments"
+			body: "*"
+			response_body: "*"
+		};
+	}
+
+	rpc UpdateComment(UpdateCommentRequest) returns (UpdateCommentResponse) {
+		option (google.api.http) = {
+			put: "/v1/comments/{id}"
+			body: "*"
+			response_body: "comment"
+		};
+	}
+
+	rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse) {
+		option (google.api.http) = {
+			delete: "/v1/comments/{id}"
+			response_body: "*"
+		};
+	}
+
+	rpc DeleteCommentByVideoID(DeleteCommentByVideoIDRequest) returns (DeleteCommentByVideoIDResponse) {}
+}

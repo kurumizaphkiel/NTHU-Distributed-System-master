@@ -1,0 +1,191 @@
+version: '3.9'
+
+x-common-env: &common-env
+  GOPATH: /go
+  GOCACHE: /src/.cache/gocache
+  MONGO_URL: mongodb://mongo:27017/
+  MONGO_DATABASE: nthu_distributed_system
+  POSTGRES_URL: postgres://postgres@postgres:5432/postgres?sslmode=disable
+  REDIS_ADDR: redis:6379
+  KAFKA_PRODUCER_ADDRS: kafka:29092
+  KAFKA_PRODUCER_TOPIC: video
+  KAFKA_CONSUMER_ADDRS: kafka:29092
+  KAFKA_CONSUMER_TOPIC: video
+  KAFKA_CONSUMER_GROUP: video-stream
+  MINIO_ENDPOINT: play.min.io
+  MINIO_BUCKET: videos
+  MINIO_USERNAME: Q3AM3UQ867SPQQA43P2F
+  MINIO_PASSWORD: zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG
+
+x-common-build: &common-build
+  image: justin0u0/golang-protoc:protoc-25.3-golang-1.21.7
+  working_dir: /src
+  environment:
+    <<: *common-env
+  volumes:
+  - .:/src
+  - ~/go/pkg/mod/cache:/go/pkg/mod/cache
+
+services:
+  mongo:
+    image: mongo:5
+
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  redis:
+    image: redis:6.2-alpine
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.0.1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+
+  generate:
+    <<: *common-build
+    command:
+    - make
+    - generate
+
+  lint:
+    image: golangci/golangci-lint:v1.44.2
+    working_dir: /src
+    environment:
+      GOLANGCI_LINT_CACHE: /src/.cache/golangci-lint-cache
+    volumes:
+    - .:/src
+    command:
+    - make
+    - lint
+
+  test:
+    <<: *common-build
+    command:
+    - make
+    - test
+    depends_on:
+    - mongo
+    - redis
+    - postgres
+
+  build:
+    <<: *common-build
+    command:
+    - make
+    - build
+
+  image:
+    image: nthu-distributed-system:latest
+    build:
+      context: .
+    environment:
+      <<: *common-env
+
+  video-api:
+    image: nthu-distributed-system:latest
+    environment:
+      <<: *common-env
+      COMMENT_SERVER_ADDR: comment-api:8081
+      METER_NAME: video.api
+      METER_HISTOGRAM_BOUNDARIES: "10,100,200,500,1000"
+    command:
+    - /cmd
+    - video
+    - api
+    depends_on:
+    - mongo
+    - redis
+    - kafka
+
+  video-gateway:
+    image: nthu-distributed-system:latest
+    environment:
+      <<: *common-env
+      GRPC_SERVER_ADDR: video-api:8081
+    command:
+    - /cmd
+    - video
+    - gateway
+    ports:
+    - 10080:8080
+
+  video-stream:
+    image: nthu-distributed-system:latest
+    environment:
+      <<: *common-env
+    command:
+    - /cmd
+    - video
+    - stream
+    depends_on:
+    - mongo
+    - kafka
+
+  comment-api:
+    image: nthu-distributed-system:latest
+    environment:
+      <<: *common-env
+      VIDEO_SERVER_ADDR: video-api:8081
+      METER_NAME: comment.api
+      METER_HISTOGRAM_BOUNDARIES: "10,100,200,500,1000"
+    command:
+    - /cmd
+    - comment
+    - api
+    depends_on:
+    - postgres
+    - redis
+
+  comment-gateway:
+    image: nthu-distributed-system:latest
+    environment:
+      <<: *common-env
+      GRPC_SERVER_ADDR: comment-api:8081
+    command:
+    - /cmd
+    - comment
+    - gateway
+    ports:
+    - 10081:8080
+
+  comment-migration:
+    image: nthu-distributed-system:latest
+    environment:
+      MIGRATION_SOURCE: file:///static/modules/comment/migration
+      MIGRATION_URL: postgres://postgres@postgres:5432/postgres?sslmode=disable
+    command:
+    - /cmd
+    - comment
+    - migration
+    depends_on:
+    - postgres
