@@ -3,6 +3,13 @@
 ## Kafka Testing Results
 ![image](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/a1541960-a479-45d5-adaa-60401027b93a)
 
+## Prometheus Testing Results
+### Otelkit Package Testing Results
+![image](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/d4ed0df0-153e-4011-825f-bdca43b12095)
+
+### Prometheus Panel Screenshot
+![image](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/022f00da-0109-48bf-95f6-9a069940a4d4)
+
 
 ## gRPC Testing Results
 ![TestRedisKit](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/4306130f-bc29-4179-ac18-55bf53bfbf7e)
