@@ -1,5 +1,10 @@
 # NTHU-Distributed-System-master
 
+# Kafka Testing Results
+![image](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/a1541960-a479-45d5-adaa-60401027b93a)
+
+
+# gRPC Testing Results
 ![TestRedisKit](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/4306130f-bc29-4179-ac18-55bf53bfbf7e)
 ![TestPGKit](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/016906f1-a3bc-4c2b-9b4a-107c9b0b8bae)
 ![TestOtelKit](https://github.com/kurumizaphkiel/NTHU-Distributed-System-master/assets/43781732/3f8fdea8-cac4-4bed-a492-fe185e588f5c)
